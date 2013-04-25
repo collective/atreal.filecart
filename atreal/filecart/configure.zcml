@@ -4,17 +4,17 @@
     xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
     xmlns:i18n="http://namespaces.zope.org/i18n"
     i18n_domain="atreal.filecart">
-    
-    
+
+
     <!-- -->
     <include package="five.intid" file="base.zcml" />
     <include package="atreal.override.albumview" />
-    
-    
+
+
     <!-- -->
     <five:registerPackage package="." initialize=".initialize" />
-    
-    
+
+
     <!-- Permissions -->
     <permission
 	id="atreal.filecart.UseCart"
@@ -28,36 +28,36 @@
 	id="atreal.filecart.DeleteComments"
 	title="atreal.filecart: Delete Download Comments"
 	/>
-    
-    
+
+
     <!-- -->
     <include package=".browser" />
     <include package=".portlets" />
-    
-    
+
+
     <!-- -->
     <adapter
        for=".interfaces.ICart"
        provides=".interfaces.ILineItemFactory"
        factory=".content.LineItemFactory"
        />
-    
-    
+
+
     <!-- -->
     <subscriber
        handler="five.intid.intid.addIntIdSubscriber"
        for="Products.CMFCore.interfaces.IDynamicType
-            zope.app.container.interfaces.IObjectAddedEvent"
+            zope.container.interfaces.IObjectAddedEvent"
         />
     <subscriber
         handler="five.intid.intid.removeIntIdSubscriber"
         for="Products.CMFCore.interfaces.IDynamicType
-             zope.app.container.interfaces.IObjectRemovedEvent"
+             zope.container.interfaces.IObjectRemovedEvent"
         />
     <subscriber
         handler="five.intid.intid.moveIntIdSubscriber"
         for="Products.CMFCore.interfaces.IDynamicType
-             zope.app.container.interfaces.IObjectMovedEvent"
+             zope.container.interfaces.IObjectMovedEvent"
         />
 
 
@@ -68,7 +68,7 @@
 	provides=".interfaces.IFileCartMarker"
         />
 
-    
+
     <!-- Event Subscriber to mark object with interface -->
     <subscriber
         for="Products.ATContentTypes.interface.interfaces.IATContentType
@@ -84,7 +84,7 @@
         provides=".interfaces.IFileCartComments"
        />
 
-    
+
     <!-- Adapter to manage cartable -->
     <adapter
         for=".interfaces.IFileCartable"
@@ -106,5 +106,5 @@
         provides="Products.GenericSetup.interfaces.EXTENSION"
         />
 
-    
+
 </configure>

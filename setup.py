@@ -27,6 +27,7 @@ setup(name='atreal.filecart',
           'setuptools',
           'five.intid',
           'atreal.override.albumview',
+          'plone.app.kss',
           # -*- Extra requirements: -*-
       ],
       entry_points="""

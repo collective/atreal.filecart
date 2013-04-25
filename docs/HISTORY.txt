@@ -3,6 +3,13 @@ Changelog for atreal.filecart
 =============================
 (name of developer listed in brackets)
 
+1.1 (Unreleased)
+----------------
+
+    - Works under Plone 4.3.
+      [thomasdesvenain]
+
+
 Version 1.0.0rc1 - 2009-12-22
 -----------------------------
     - Bug Fix : Portlet was shown empty when not available. Now he's not shown.

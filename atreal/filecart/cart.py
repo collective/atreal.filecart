@@ -5,7 +5,11 @@ from AccessControl import getSecurityManager
 
 from zope.component import getMultiAdapter, queryUtility, getUtility
 from zope.interface import implements
-from zope.app.container.ordered import OrderedContainer
+
+try:
+    from zope.app.container.ordered import OrderedContainer
+except:
+    from zope.container.ordered import OrderedContainer
 
 from Products.CMFCore.utils import getToolByName
 
@@ -18,14 +22,14 @@ class FileCartProvider(object):
     """
     """
     implements(IFileCartProvider)
-    
+
     _cart = None
-    
+
     def __init__(self, context):
         """
         """
         self.context = context
-    
+
     @property
     def cart(self):
         if self._cart is not None:
@@ -33,7 +37,7 @@ class FileCartProvider(object):
         cart_manager = queryUtility(ICartUtility)
         self._cart = cart_manager.get(self.context, create=True)
         return self._cart
-    
+
     def addToCart(self):
         """
         """
@@ -65,14 +69,14 @@ class Cart (OrderedContainer):
     implements (ICart)
 
     last_item = None
-    
+
     def size (self):
         return len (self.keys ())
 
     def __setitem__ (self, key, value):
         super (Cart, self).__setitem__ (key, value)
         self.last_item = key
-        
+
     def __delitem__ (self, key):
         if not key in self:
             return
@@ -150,7 +154,7 @@ class CartUtility (Persistent):
 
     def _getDisposableCart(self, context, browser_id=None):
         return Cart()
-        
+
 
 
     def destroy(self, context, key=None):

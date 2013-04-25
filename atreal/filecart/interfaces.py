@@ -1,6 +1,9 @@
 from zope import schema
 from zope.interface import Interface
-from zope.app.container.interfaces import IContainer
+try:
+    from zope.container.interfaces import IContainer
+except ImportError:
+    from zope.app.container.interfaces import IContainer
 
 from atreal.filecart import FileCartMessageFactory as _
 
@@ -9,7 +12,7 @@ class IFileCartLayer(Interface):
     """
 
 class IFileCartSite(Interface):
-    """ Marker interface 
+    """ Marker interface
     """
 
 class ILineItem (Interface):
@@ -79,7 +82,7 @@ class IFileCartProvider(Interface):
 class IFileCartMarker(Interface):
     """
     """
-    
+
 class IFileCartMarkerUtility(Interface):
     """
     """
@@ -91,11 +94,11 @@ class IFileCartable(Interface):
 class IFileCartableView(Interface):
     """
     """
-    
+
 class IFileCartComments(Interface):
     """
     """
-    
+
 class IFileCartCommentsUtility(Interface):
     """
     """

@@ -12,7 +12,7 @@ import os
 import tempfile
 import zipfile
 import time
-import DateTime
+from DateTime import DateTime
 
 from plone.memoize import instance
 from Acquisition import aq_inner
@@ -32,7 +32,7 @@ class CartProvider (BrowserView) :
     """
     msg = {
         'noSelection': _(u'fc_noselection',u"Your selection is empty. Nothing to delete."),
-        'addOk': _(u'fc_addok',u"Your selection has been correctly added to your Cart."),                
+        'addOk': _(u'fc_addok',u"Your selection has been correctly added to your Cart."),
         'deleteOk': _(u'fc_deleteok',u"Your selection has been correctly deleted."),
         'alreadyExist': _(u'fc_alreadyexist',u"This element already exists in your Cart."),
         'notCartable': _(u'fc_notcartable',u"This element can't be added to your Cart."),
@@ -41,7 +41,7 @@ class CartProvider (BrowserView) :
         'download': _(u'fc_download',u"Normally you download your cart with this action."),
         'notInCart': _(u'fc_notincart',u"This element not exists in your Cart."),
     }
-    
+
     _cart = None
 
     @property
@@ -51,46 +51,46 @@ class CartProvider (BrowserView) :
         cart_manager = getUtility (interfaces.ICartUtility)
         self._cart = cart_manager.get (self.context, create=True)
         return self._cart
-    
+
     @property
     def _options (self):
         _siteroot = queryUtility (IPloneSiteRoot)
         return IFileCartSchema (_siteroot)
-    
-       
+
+
     def isCartable (self):
         return interfaces.IFileCartable.providedBy(self.context)
-   
+
     def isEmpty (self):
         if self.cart.size () == 0:
             return True
 
     def isContextAlreadyInCart(self):
         return IFileCartProvider(self.context).isInCart()
-    
+
     def isObjectAlreadyInCart(self, obj):
         return IFileCartProvider(obj).isInCart()
-    
+
     def getSize (self):
         return self.cart.size ()
-    
+
     def getLastItemUID (self):
         return self.cart.last_item
-    
+
     def getLinkAddToCart (self):
         return self.context.absolute_url() + '/@@filecart-cart?add_item=true'
-    
+
     def getLinkToCart (self):
         return self.context.absolute_url() + '/@@filecart-cart'
 
     def getLinkToContext (self):
         return self.context.absolute_url() + '/view'
-    
+
     def clearCart (self):
         cart_manager = getUtility (interfaces.ICartUtility)
         cart_manager.destroy (self.context)
         self.context.plone_utils.addPortalMessage (self.msg['emptyOk'])
-    
+
     def delFromCart (self):
         if IFileCartProvider(self.context).delFromCart() is False:
             self.context.plone_utils.addPortalMessage(self.msg['notInCart'])
@@ -104,11 +104,11 @@ class CartProvider (BrowserView) :
                 self.cart.__delitem__(uid)
             self.context.plone_utils.addPortalMessage(self.msg['deleteOk'])
         else:
-            self.context.plone_utils.addPortalMessage(self.msg['noSelection'])  
-    
+            self.context.plone_utils.addPortalMessage(self.msg['noSelection'])
+
     def downloadCart (self):
         if self.isEmpty ():
-            self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])   
+            self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
         else :
             result = []
             for item in self.cart.items ():
@@ -119,7 +119,7 @@ class CartProvider (BrowserView) :
             user = getSecurityManager().getUser().getId()
             comment = dict(
                 user = user,
-                date = DateTime.now(),
+                date = DateTime(),
                 comment = self.request.form['filecart_download_comment'],)
             filecartcommentsutility = getUtility(interfaces.IFileCartCommentsUtility)
             filecartcommentsutility.commentDownload(self.context, result, comment)
@@ -134,8 +134,8 @@ class CartProvider (BrowserView) :
                 self.context.plone_utils.addPortalMessage(self.msg['addOk'])
         else :
             self.context.plone_utils.addPortalMessage(self.msg['notCartable'])
-        
-    
+
+
     def addToCartMulti (self, obj):
         # create a line item and add it to the cart
         if self.isObjectAlreadyInCart (obj):
@@ -148,21 +148,21 @@ class CartProvider (BrowserView) :
 class CartActionProvider(BrowserView):
     """
     """
-    
+
     def isCartable(self):
-        """ 
+        """
         """
         return interfaces.IFileCartable.providedBy(self.context)
 
     def isInCart(self):
-        """ 
+        """
         """
         return interfaces.IFileCartProvider(self.context).isInCart()
-    
+
 class FileCartView (CartProvider) :
     """
     """
-    
+
     def __call__(self):
         if self.request.has_key ('cart.actions.delete'):
             self.delFromCartMulti()
@@ -184,7 +184,7 @@ class FileCartView (CartProvider) :
                     for uuid in listchoix:
                         self.addToCartMulti (reference_tool.lookupObject(uuid))
         return super(FileCartView, self).__call__()
-    
+
     def contents_table (self):
         table = CartContentsTable (self.context, self.request)
         return table.render()
@@ -197,18 +197,18 @@ class FileCartView (CartProvider) :
         return icon.html_tag()
 
 class CartContentsTable(object):
-    """   
+    """
     The foldercontents table renders the table and its actions.
-    """                
+    """
     _cart = None
-    
+
     def __init__(self, context, request):
         self.context = context
         self.request = request
         #self.cart = cart
         self.pagesize = 20
         self.ispreviewenabled = True
-        
+
         url = self.context.absolute_url()
         view_url = url + '/@@filecart-cart'
         self.table = Table(request, url, view_url, self.items,
@@ -228,19 +228,19 @@ class CartContentsTable(object):
         return self._cart
 
     def isOverrideAlbumViewInstalled(self):
-        """ 
+        """
         """
         if queryUtility(IInterface, name=u'atreal.override.albumview.IOverrideAlbumViewSite', default=False):
             return True
         return False
-    
+
     def isRichFileImageInstalled(self):
-        """ 
+        """
         """
         if queryUtility(IInterface, name=u'atreal.richfile.image.IRichFileImageSite', default=False):
             return True
         return False
-    
+
     @property
     @instance.memoize
     def items(self):
@@ -251,19 +251,19 @@ class CartContentsTable(object):
         portal_workflow = getToolByName(self.context, 'portal_workflow')
         portal_properties = getToolByName(self.context, 'portal_properties')
         site_properties = portal_properties.site_properties
-        
+
         use_view_action = site_properties.getProperty('typesUseViewActionInListings', ())
 
         brains_image_uid = []
         if self.isRichFileImageInstalled() == True:
-            brains_image = self.context.portal_catalog(object_provides='atreal.richfile.image.interfaces.IImage')     
+            brains_image = self.context.portal_catalog(object_provides='atreal.richfile.image.interfaces.IImage')
             for brain_image in brains_image:
                 brains_image_uid.append(brain_image.UID)
-        
+
         albumview = False
         if self.isOverrideAlbumViewInstalled() == True:
             albumview = True
-            
+
         results = []
         for i, item in enumerate(self.cart.items()):
             pc = self.context.portal_catalog(UID=item[0])
@@ -282,24 +282,24 @@ class CartContentsTable(object):
                 ))
             else:
                 obj = pc [0]
-    
+
                 url = obj.getURL()
                 path = obj.getPath or "/".join(obj.getPhysicalPath())
                 icon = plone_view.getIcon(obj);
-                
+
                 type_class = 'contenttype-' + plone_utils.normalizeString(
                     obj.portal_type)
-    
+
                 review_state = obj.review_state
                 state_class = 'state-' + plone_utils.normalizeString(review_state)
                 relative_url = obj.getURL(relative=True)
                 obj_type = obj.portal_type
-                
+
                 if obj_type in use_view_action:
                     view_url = url + '/view'
                 else:
                     view_url = url
-                    
+
                 if obj.UID in brains_image_uid:
                     thumb = url+'/rfimage/thumb'
                 elif obj.portal_type == "Image":
@@ -308,7 +308,7 @@ class CartContentsTable(object):
                     thumb = self.context.portal_url()+'/rf_'+obj.getIcon
                 else:
                     thumb = False
-                
+
                 results.append(dict(
                     UID = obj.UID,
                     url = url,
@@ -338,13 +338,13 @@ class CartContentsTable(object):
     @property
     def orderable(self):
         """
-        """        
+        """
         return IOrderedContainer.providedBy(self.context)
 
     @property
     def show_sort_column(self):
         return self.orderable and self.editable
-        
+
     @property
     def editable(self):
         """
@@ -358,7 +358,7 @@ class CartContentsTable(object):
         buttons = []
         portal_actions = getToolByName(self.context, 'portal_actions')
         button_actions = portal_actions.listActionInfos(object=aq_inner(self.context), categories=('cart_actions', ))
-        
+
         # Do not show buttons if there is no data, unless there is data to be
         # pasted
         if not len(self.items):
@@ -381,16 +381,16 @@ class CartContentsTable(object):
         else:
             button['cssclass'] = 'context'
         return button
-    
-    
+
+
 class FileCartZip (object):
-    
+
     def __init__ (self, request, brains):
         self.request = request
         self.brains = brains
         path = self.createZip ()
         self.downloadZip (path)
-    
+
     def createZip (self):
         fd, path = tempfile.mkstemp('.zip')
         os.close(fd)
@@ -405,7 +405,7 @@ class FileCartZip (object):
 
         zip.close()
         return path
-    
+
     def downloadZip (self, path):
         filename = "cart-" + time.strftime('%y%m%d-%H%M',time.localtime()) + ".zip"
         RESPONSE = self.request.RESPONSE

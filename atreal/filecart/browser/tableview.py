@@ -1,5 +1,11 @@
-from zope.app.pagetemplate import ViewPageTemplateFile
-from plone.app.content.batching import Batch
+
+try:
+    from zope.browserpage import ViewPageTemplateFile
+except ImportError:
+    from zope.app.pagetemplate import ViewPageTemplateFile
+
+from plone.batching import Batch
+
 from plone.memoize import instance
 
 try:
@@ -8,11 +14,11 @@ except ImportError:
     from Products.Five import BrowserView as KSSView
 
 class Table(object):
-    """   
+    """
     The table renders a table with sortable columns etc.
 
     It is meant to be subclassed to provide methods for getting specific table info.
-    """                
+    """
 
     def __init__(self, request, base_url, view_url, items, show_sort_column=False,
                  buttons=[], pagesize=20, ispreviewenabled=False):
@@ -32,7 +38,7 @@ class Table(object):
             self.pagesize = pagesize
         self.show_all = request.get('show_all', '').lower() == 'true'
         self.ispreviewenabled = ispreviewenabled
-        
+
         selection = request.get('select')
         if selection == 'screen':
             self.selectcurrentbatch=True
@@ -59,8 +65,8 @@ class Table(object):
         if self.show_all:
             pagesize = len(self.items)
         b = Batch(self.items,
-                  pagesize=pagesize,
-                  pagenumber=self.pagenumber)
+                  size=pagesize,
+                  start=self.pagenumber)
         map(self.set_checked, b)
         return b
 
@@ -135,7 +141,7 @@ class TableKSSView(KSSView):
 
     Subclasses only need to set the table property to a different
     class.'''
-    
+
     table = None
 
     def update_table(self, pagenumber='1', sort_on='getObjPositionInParent', show_all=False):
