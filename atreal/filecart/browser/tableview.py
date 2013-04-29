@@ -1,10 +1,9 @@
+from Products.CMFPlone.PloneBatch import Batch
 
 try:
     from zope.browserpage import ViewPageTemplateFile
 except ImportError:
     from zope.app.pagetemplate import ViewPageTemplateFile
-
-from plone.batching import Batch
 
 from plone.memoize import instance
 
@@ -24,7 +23,6 @@ class Table(object):
                  buttons=[], pagesize=20, ispreviewenabled=False):
         self.request = request
         self.context = None # Need for view pagetemplate
-
         self.base_url = base_url
         self.view_url = view_url
         self.url = view_url
@@ -66,7 +64,7 @@ class Table(object):
             pagesize = len(self.items)
         b = Batch(self.items,
                   size=pagesize,
-                  start=self.pagenumber)
+                  start=(self.pagenumber-1)*pagesize)
         map(self.set_checked, b)
         return b
 
