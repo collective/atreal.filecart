@@ -6,6 +6,12 @@ Changelog for atreal.filecart
 1.1 (Unreleased)
 ----------------
 
+    - On zip export, use if possible filename instead of content id.
+      [thomasdesvenain]
+
+    - Avoid doubles in zip export.
+      [thomasdesvenain]
+
     - Works under Plone 4.3.
       [thomasdesvenain]
 
@@ -30,7 +36,7 @@ Version 0.1.0 - Unreleased
 ---------------------------
     - First development.
       [Florent Michon]
-    
+
     - Initial package structure.
       [zopeskel]
 

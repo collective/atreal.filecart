@@ -400,8 +400,17 @@ class FileCartZip (object):
         for brain in self.brains:
             content = brain.getObject()
             field = content.getPrimaryField()
-            file = str(field.get(content).data)
-            zip.writestr(content.getId(), file)
+            value = field.get(content)
+            file = str(value.data)
+            namelist = zip.namelist()
+            if value.filename not in namelist:
+                filename = value.filename
+            elif content.getId() + '-' + value.filename not in namelist:
+                filename = content.getId() + '-' + value.filename
+            else:
+                filename = content.UID() + '-' + value.filename
+
+            zip.writestr(filename, file)
 
         zip.close()
         return path
