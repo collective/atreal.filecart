@@ -528,13 +528,19 @@ class FileCartZip (object):
                         break
 
                 if (not scales) or ('_source' in scales):
-                    zip.writestr(filename.decode('utf-8'), str(value.data))
+                    data = str(value.data)
+                    if data:
+                        zip.writestr(filename.decode('utf-8'), data)
 
                 for scale in scales:
                     if scale == '_source':
                         continue
 
                     scale_value = field.getScale(content, scale)
+                    data = str(scale_value.data)
+                    if not data:
+                        continue
+
                     scale_content_type = scale_value.getContentType()
                     scale_mimetype = mttool.lookup(scale_content_type)[0]
                     if scale_content_type == value.getContentType():
@@ -549,8 +555,7 @@ class FileCartZip (object):
                     scale_filename_base = filename.split('.', -1)[0]
                     scale_filename = "%s-%s.%s" % (scale_filename_base,
                                                    scale, scale_extension)
-                    zip.writestr(scale_filename.decode('utf-8'),
-                                 str(scale_value.data))
+                    zip.writestr(scale_filename.decode('utf-8'), data)
 
         zip.close()
         return path

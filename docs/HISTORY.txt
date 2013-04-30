@@ -6,6 +6,9 @@ Changelog for atreal.filecart
 1.1 (Unreleased)
 ----------------
 
+    - Exclude empty file fields from zip.
+      [thomasdesvenain]
+
     - Extend api so that we can select scales of a carted image.
       The selected scales are exported in the zip file.
       [thomasdesvenain]
