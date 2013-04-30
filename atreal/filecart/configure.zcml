@@ -9,6 +9,7 @@
     <!-- -->
     <include package="five.intid" file="base.zcml" />
     <include package="atreal.override.albumview" />
+    <include package="plone.app.kss" />
 
 
     <!-- -->
