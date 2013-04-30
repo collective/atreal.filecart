@@ -47,12 +47,18 @@ class FileCartProvider(object):
         item_factory.create()
         return True
 
-    def delFromCart(self):
+    def delFromCart(self, fieldname=None):
         """
         """
         if not self.isInCart():
             return False
-        self.cart.__delitem__(self.context.UID())
+
+        uid = self.context.UID()
+        if not fieldname:
+            self.cart.__delitem__(uid)
+        else:
+            self.cart[uid].additional_attachments.remove(fieldname)
+
         return True
 
     def isInCart(self):

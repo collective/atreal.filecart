@@ -92,8 +92,8 @@ class CartProvider (BrowserView) :
         cart_manager.destroy (self.context)
         self.context.plone_utils.addPortalMessage (self.msg['emptyOk'])
 
-    def delFromCart (self):
-        if IFileCartProvider(self.context).delFromCart() is False:
+    def delFromCart(self, fieldname=None):
+        if IFileCartProvider(self.context).delFromCart(fieldname=fieldname) is False:
             self.context.plone_utils.addPortalMessage(self.msg['notInCart'])
         else:
             self.context.plone_utils.addPortalMessage(self.msg['deleteOk'])
@@ -164,45 +164,6 @@ class CartActionProvider(BrowserView):
         """
         """
         return interfaces.IFileCartProvider(self.context).isInCart()
-
-
-class FileCartView(CartProvider) :
-    """
-    """
-
-    def __call__(self):
-        if self.request.has_key ('cart.actions.delete'):
-            self.delFromCartMulti()
-        elif self.request.has_key ('cart.actions.clear'):
-            self.clearCart()
-        elif self.request.has_key ('cart.actions.download'):
-            self.downloadCart()
-        elif self.request.has_key ('add_item'):
-            self.addToCart()
-        elif self.request.has_key ('del_item'):
-            self.delFromCart()
-        elif self.request.has_key ('add_items'):
-            reference_tool = getToolByName (self.context, 'reference_catalog')
-            if self.request.form.has_key('choix[]'):
-                listchoix = self.request.form['choix[]']
-                if type(listchoix)==str:
-                    self.addToCartMulti (reference_tool.lookupObject(listchoix))
-                else:
-                    for uuid in listchoix:
-                        self.addToCartMulti (reference_tool.lookupObject(uuid))
-
-        return super(FileCartView, self).__call__()
-
-    def contents_table (self):
-        table = CartContentsTable (self.context, self.request)
-        return table.render()
-
-    def icon(self):
-        """
-        """
-        ploneview = getMultiAdapter((self.context, self.request), name="plone")
-        icon = ploneview.getIcon(self.context)
-        return icon.html_tag()
 
 
 class CartContentsTable(object):
@@ -333,28 +294,29 @@ class CartContentsTable(object):
                     thumb = False
 
                 results.append(dict(
-                    UID = brain.UID,
-                    url = url,
-                    id  = brain.getId,
-                    quoted_id = quoted_id,
-                    path = path,
-                    title_or_id = brain.pretty_title_or_id(),
-                    description = brain.Description,
-                    obj_type = obj_type,
-                    size = brain.getObjSize,
-                    icon = brain.getIcon,
-                    type_class = type_class,
-                    wf_state = review_state,
-                    state_title = portal_workflow.getTitleForStateOnType(review_state,
+                    UID=brain.UID,
+                    url=url,
+                    id=brain.getId,
+                    quoted_id=quoted_id,
+                    path=path,
+                    title_or_id=brain.pretty_title_or_id(),
+                    description=brain.Description,
+                    obj_type=obj_type,
+                    size=brain.getObjSize,
+                    icon=brain.getIcon,
+                    type_class=type_class,
+                    wf_state=review_state,
+                    state_title= portal_workflow.getTitleForStateOnType(review_state,
                                                                obj_type),
-                    state_class = state_class,
-                    folderish = brain.is_folderish,
-                    relative_url = relative_url,
-                    view_url = view_url,
+                    state_class= state_class,
+                    folderish= brain.is_folderish,
+                    relative_url= relative_url,
+                    view_url= view_url,
                     table_row_class = table_row_class,
-                    thumb = thumb,
-                    is_expired = is_expired,
-                    is_deleted = False,
+                    thumb=thumb,
+                    is_expired=is_expired,
+                    is_deleted=False,
+                    fieldname=None
                 ))
 
             # ##### additional fields # #########
@@ -367,11 +329,11 @@ class CartContentsTable(object):
                     if len(pc) == 0:
                         table_row_class += " deleted"
                         results.append(dict(
-                            UID = uid,
-                            id = item.name + '-' + fieldname,
-                            title_or_id = "%s (%s)" % (item.name, fieldname),
+                            UID=uid,
+                            id=item.name + '-' + fieldname,
+                            title_or_id="%s (%s)" % (item.name, fieldname),
                             is_deleted=True,
-                            table_row_class = table_row_class,
+                            table_row_class=table_row_class,
                         ))
                     else:
 
@@ -415,6 +377,7 @@ class CartContentsTable(object):
                             is_expired=is_expired,
                             is_deleted=False,
                             is_additional=True,
+                            fieldname=fieldname,
                         ))
 
         return results
@@ -465,6 +428,48 @@ class CartContentsTable(object):
         else:
             button['cssclass'] = 'context'
         return button
+
+
+class FileCartView(CartProvider) :
+    """
+    """
+
+    __table__ = CartContentsTable
+
+    def __call__(self):
+        if self.request.has_key ('cart.actions.delete'):
+            self.delFromCartMulti()
+        elif self.request.has_key ('cart.actions.clear'):
+            self.clearCart()
+        elif self.request.has_key ('cart.actions.download'):
+            self.downloadCart()
+        elif self.request.has_key ('add_item'):
+            self.addToCart()
+        elif self.request.has_key ('del_item'):
+            import pdb;pdb.set_trace()
+            self.delFromCart(fieldname=self.request.get('fieldname'))
+        elif self.request.has_key ('add_items'):
+            reference_tool = getToolByName (self.context, 'reference_catalog')
+            if self.request.form.has_key('choix[]'):
+                listchoix = self.request.form['choix[]']
+                if type(listchoix)==str:
+                    self.addToCartMulti (reference_tool.lookupObject(listchoix))
+                else:
+                    for uuid in listchoix:
+                        self.addToCartMulti (reference_tool.lookupObject(uuid))
+
+        return super(FileCartView, self).__call__()
+
+    def contents_table (self):
+        table = self.__table__(self.context, self.request)
+        return table.render()
+
+    def icon(self):
+        """
+        """
+        ploneview = getMultiAdapter((self.context, self.request), name="plone")
+        icon = ploneview.getIcon(self.context)
+        return icon.html_tag()
 
 
 class FileCartZip (object):
