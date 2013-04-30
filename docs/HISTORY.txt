@@ -6,6 +6,11 @@ Changelog for atreal.filecart
 1.1 (Unreleased)
 ----------------
 
+    - If we add to cart documents that have many file / image fields,
+      we manage those fields in our cart:
+      we can include each of them in zip or not.
+      [thomasdesvenain]
+
     - On zip export, use if possible filename instead of content id.
       [thomasdesvenain]
 

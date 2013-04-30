@@ -18,20 +18,20 @@ class OrderedPersistentDict(DictMixin, Persistent):
         self._keylist = PersistentList()
         if not data is None:
             self.update(data)
-  
+
     def __setitem__(self, key, val):
         self._data[key] = val
         if key in self._keylist:
             self._keylist.remove(key)
-        self._keylist.append(key)    
-    
+        self._keylist.append(key)
+
     def __getitem__(self, key):
         return self._data[key]
-    
+
     def __delitem__(self, key):
         self._keylist.remove(key)
         del self._data[key]
-    
+
     def keys(self):
         return self._keylist[:]
 
@@ -40,20 +40,20 @@ class OrderedPersistentDict(DictMixin, Persistent):
         items.reverse()
         return items
 
-    
+
 class FileCartComments(object):
     """
     """
     implements(IFileCartComments)
-    
+
     key = "filecart"
     _comments = None
-    
+
     def __init__(self, context):
         """
         """
         self.context = context
-    
+
     @property
     def comments(self):
         """
@@ -64,7 +64,7 @@ class FileCartComments(object):
                 annotations[self.key] = OrderedPersistentDict()
             self._comments = annotations[self.key]
         return self._comments
-    
+
     def hasComments(self):
         """
         """
@@ -73,12 +73,12 @@ class FileCartComments(object):
             return True
         else:
             return False
-    
+
     def setComment(self, comment):
         """
         """
         self.comments[time.time()]=comment
-    
+
     def cleanComments(self):
         """
         """
@@ -86,17 +86,17 @@ class FileCartComments(object):
         if annotations.has_key(self.key):
             del annotations[self.key]
         self._comments = None
-    
+
 
 class FileCartCommentsUtility(object):
     """
     """
     implements(IFileCartCommentsUtility)
-    
-    def commentDownload(self, context, brains, comment):
+
+    def commentDownload(self, context, items, comment):
         bad_objects = []
         i = 0
-        for brain in brains:
+        for brain, additional_attachments in items:
             try:
                 IFileCartComments(brain.getObject()).setComment(comment)
                 i += 1
@@ -104,7 +104,7 @@ class FileCartCommentsUtility(object):
                 bad_objects.append(brain.getPath())
                 continue
         return i, bad_objects
-    
+
     def cleanAllComments(self, context):
         pc = getToolByName(context, 'portal_catalog')
         bad_objects = []

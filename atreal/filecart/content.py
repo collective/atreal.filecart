@@ -2,6 +2,7 @@ from persistent import Persistent
 
 from zope import component
 from zope.interface import implements
+from persistent.list import PersistentList
 try:
     from zope.intid.interfaces import IIntIds
     from zope.container.interfaces import ILocation
@@ -96,5 +97,22 @@ class LineItemFactory( object ):
         # copy over information regarding the item
         nitem.name = getUnicodeString( self.content.Title() )
         nitem.description = getUnicodeString( self.content.Description() )
+
+        additional_attachments = []
+        for fieldname in self.content.Schema().keys():
+            if fieldname == self.content.getPrimaryField().__name__:
+                continue
+
+            field = self.content.getField(fieldname)
+            if field.type not in ('image', 'file', 'blob', 'bigblob'):
+                continue
+            else:
+                if field.get(self.content):
+                    additional_attachments.append(fieldname)
+
+        if len(additional_attachments) > 0:
+            setattr(nitem, 'additional_attachments',
+                    PersistentList(additional_attachments))
+
         return nitem
 

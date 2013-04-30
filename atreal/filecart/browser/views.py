@@ -15,7 +15,7 @@ class FileCartableView(PloneKSSView):
     """
     """
     implements(IFileCartableView)
-    
+
     @kssaction
     def cleanAllComments(self):
         """
@@ -30,7 +30,7 @@ class FileCartableView(PloneKSSView):
         # Refresh the viewlet Download Comments
         selector = ksscore.getHtmlIdSelector('filecart')
         zopecommands.refreshViewlet(selector, 'plone.belowcontentbody', 'atreal.filecart.viewlet.comments')
-    
+
     @kssaction
     def showAllComments(self):
         """
@@ -61,8 +61,8 @@ class FileCartableView(PloneKSSView):
         zopecommands.refreshViewlet(selector, 'plone.belowcontentbody', 'plone.abovecontenttitle.documentactions')
         # Refresh the portlet Cart Portlet
         portletReloader = PortletReloader(self)
-        portletReloader.reloadPortletsByInterface(ICartPortlet)        
-        
+        portletReloader.reloadPortletsByInterface(ICartPortlet)
+
     @kssaction
     def delObjectFromCart(self):
         ksscore = self.getCommandSet('core')
@@ -81,4 +81,4 @@ class FileCartableView(PloneKSSView):
         # Refresh the portlet Cart Portlet
         portletReloader = PortletReloader(self)
         portletReloader.reloadPortletsByInterface(ICartPortlet)
-    
+

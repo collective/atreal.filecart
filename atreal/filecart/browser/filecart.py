@@ -1,4 +1,5 @@
 from zope.component import getMultiAdapter, queryUtility, getUtility
+from zope.size import byteDisplay
 
 from AccessControl import getSecurityManager
 
@@ -26,6 +27,7 @@ from atreal.filecart.browser.controlpanel import IFileCartSchema
 from atreal.filecart.browser.tableview import Table, TableKSSView
 
 from atreal.filecart.interfaces import IFileCartable, IFileCartProvider
+from zope.i18n import translate
 
 class CartProvider (BrowserView) :
     """
@@ -56,7 +58,6 @@ class CartProvider (BrowserView) :
     def _options (self):
         _siteroot = queryUtility (IPloneSiteRoot)
         return IFileCartSchema (_siteroot)
-
 
     def isCartable (self):
         return interfaces.IFileCartable.providedBy(self.context)
@@ -101,7 +102,11 @@ class CartProvider (BrowserView) :
         if self.request.has_key ('uids'):
             uids = self.request.form ['uids']
             for uid in uids:
-                self.cart.__delitem__(uid)
+                if '-' in uid: # we delete only an additional content
+                    uuid, fieldname = uid.split('-')
+                    self.cart[uuid].additional_attachments.remove(fieldname)
+                else:
+                    self.cart.__delitem__(uid)
             self.context.plone_utils.addPortalMessage(self.msg['deleteOk'])
         else:
             self.context.plone_utils.addPortalMessage(self.msg['noSelection'])
@@ -111,11 +116,12 @@ class CartProvider (BrowserView) :
             self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
         else :
             result = []
-            for item in self.cart.items ():
-                pc = self.context.portal_catalog (UID=item[0])
+            for uid, item in self.cart.items ():
+                pc = self.context.portal_catalog(UID=uid)
                 if len(pc) != 0:
-                    result.append (pc[0])
-            FileCartZip (self.request, result)
+                    result.append ((pc[0], getattr(item, 'additional_attachments', [])))
+
+            FileCartZip(self.request, result)
             user = getSecurityManager().getUser().getId()
             comment = dict(
                 user = user,
@@ -138,10 +144,10 @@ class CartProvider (BrowserView) :
 
     def addToCartMulti (self, obj):
         # create a line item and add it to the cart
-        if self.isObjectAlreadyInCart (obj):
+        if self.isObjectAlreadyInCart(obj):
             self.context.plone_utils.addPortalMessage(self.msg['alreadyExist'])
         else:
-            item_factory = LineItemFactory (self.cart, obj);
+            item_factory = LineItemFactory(self.cart, obj)
             item_factory.create()
 
 
@@ -246,17 +252,21 @@ class CartContentsTable(object):
     def items(self):
         """
         """
-        plone_utils = getToolByName(self.context, 'plone_utils')
-        plone_view = getMultiAdapter((self.context, self.request), name=u'plone')
-        portal_workflow = getToolByName(self.context, 'portal_workflow')
-        portal_properties = getToolByName(self.context, 'portal_properties')
+        context, request = self.context, self.request
+        plone_utils = getToolByName(context, 'plone_utils')
+        plone_view = getMultiAdapter((context, self.request), name=u'plone')
+        portal_workflow = getToolByName(context, 'portal_workflow')
+        portal_properties = getToolByName(context, 'portal_properties')
         site_properties = portal_properties.site_properties
+        mimetypes_registry = getToolByName(context, 'mimetypes_registry')
+        portal_url = getToolByName(context, 'portal_url')()
+        portal_catalog = getToolByName(context, 'portal_catalog')
 
         use_view_action = site_properties.getProperty('typesUseViewActionInListings', ())
 
         brains_image_uid = []
         if self.isRichFileImageInstalled() == True:
-            brains_image = self.context.portal_catalog(object_provides='atreal.richfile.image.interfaces.IImage')
+            brains_image = portal_catalog(object_provides='atreal.richfile.image.interfaces.IImage')
             for brain_image in brains_image:
                 brains_image_uid.append(brain_image.UID)
 
@@ -265,74 +275,140 @@ class CartContentsTable(object):
             albumview = True
 
         results = []
-        for i, item in enumerate(self.cart.items()):
-            pc = self.context.portal_catalog(UID=item[0])
-            if (i + 1) % 2 == 0:
-                table_row_class = "draggable even"
-            else:
-                table_row_class = "draggable odd"
+        i = -1
+        for uid, item in self.cart.items():
+            i += 1
+            pc = portal_catalog(UID=uid)
+            table_row_class = "draggable "
+            table_row_class += (i + 1) % 2 == 0 and "even" or "odd"
+
             if len(pc) == 0:
                 table_row_class += " deleted"
                 results.append(dict(
-                    UID = item[0],
-                    id = item[1].name,
-                    title_or_id = item[1].name,
-                    is_deleted=True,
+                    UID = uid,
+                    id = item.name,
+                    title_or_id = item.name,
+                    is_deleted = True,
                     table_row_class = table_row_class,
                 ))
             else:
-                obj = pc [0]
+                brain = pc[0]
 
-                url = obj.getURL()
-                path = obj.getPath or "/".join(obj.getPhysicalPath())
-                icon = plone_view.getIcon(obj);
+                url = brain.getURL()
+                path = brain.getPath or "/".join(brain.getPhysicalPath())
 
                 type_class = 'contenttype-' + plone_utils.normalizeString(
-                    obj.portal_type)
+                    brain.portal_type)
 
-                review_state = obj.review_state
+                review_state = brain.review_state
                 state_class = 'state-' + plone_utils.normalizeString(review_state)
-                relative_url = obj.getURL(relative=True)
-                obj_type = obj.portal_type
+                relative_url = brain.getURL(relative=True)
+                obj_type = brain.portal_type
+
+                is_expired = context.isExpired(brain)
+                state_title = portal_workflow.getTitleForStateOnType(review_state,
+                                                                     obj_type)
+                quoted_id = urllib.quote_plus(brain.getId)
 
                 if obj_type in use_view_action:
                     view_url = url + '/view'
                 else:
                     view_url = url
 
-                if obj.UID in brains_image_uid:
+                if brain.UID in brains_image_uid:
                     thumb = url+'/rfimage/thumb'
-                elif obj.portal_type == "Image":
+                elif brain.portal_type == "Image":
                     thumb = url+'/image_thumb'
                 elif albumview:
-                    thumb = self.context.portal_url()+'/rf_'+obj.getIcon
+                    thumb = "%s/rf_%s" % (context.portal_url(), brain.getIcon)
                 else:
                     thumb = False
 
                 results.append(dict(
-                    UID = obj.UID,
+                    UID = brain.UID,
                     url = url,
-                    id  = obj.getId,
-                    quoted_id = urllib.quote_plus(obj.getId),
+                    id  = brain.getId,
+                    quoted_id = quoted_id,
                     path = path,
-                    title_or_id = obj.pretty_title_or_id(),
-                    description = obj.Description,
+                    title_or_id = brain.pretty_title_or_id(),
+                    description = brain.Description,
                     obj_type = obj_type,
-                    size = obj.getObjSize,
-                    icon = icon.html_tag(),
+                    size = brain.getObjSize,
+                    icon = brain.getIcon,
                     type_class = type_class,
                     wf_state = review_state,
                     state_title = portal_workflow.getTitleForStateOnType(review_state,
                                                                obj_type),
                     state_class = state_class,
-                    folderish = obj.is_folderish,
+                    folderish = brain.is_folderish,
                     relative_url = relative_url,
                     view_url = view_url,
                     table_row_class = table_row_class,
                     thumb = thumb,
-                    is_expired = self.context.isExpired(obj),
+                    is_expired = is_expired,
                     is_deleted = False,
                 ))
+
+            # ##### additional fields # #########
+            if hasattr(item, 'additional_attachments'):
+                obj = brain.getObject()
+                for fieldname in item.additional_attachments:
+                    i += 1
+                    table_row_class = "additional draggable "
+                    table_row_class += (i + 1) % 2 == 0 and "even" or "odd"
+                    if len(pc) == 0:
+                        table_row_class += " deleted"
+                        results.append(dict(
+                            UID = uid,
+                            id = item.name + '-' + fieldname,
+                            title_or_id = "%s (%s)" % (item.name, fieldname),
+                            is_deleted=True,
+                            table_row_class = table_row_class,
+                        ))
+                    else:
+
+                        state_class = 'state-' + plone_utils.normalizeString(review_state)
+                        relative_url = brain.getURL(relative=True)
+                        obj_type = obj.portal_type
+                        view_url = obj_type in use_view_action and (url + '/view') or url
+
+                        field = obj.getField(fieldname)
+                        value = field.get(obj)
+                        filename = value.filename
+                        icon = mimetypes_registry.lookupExtension(filename).icon_path
+                        size = byteDisplay(value.get_size())
+
+                        type_class = 'contenttype-' + plone_utils.normalizeString(
+                            brain.portal_type) + '-' + field.type
+                        # for the moment, content sizes are not translated,
+                        # so we don't translate additional fields sizes
+                        size = translate(size, context=self.request, target_language='en')
+
+                        results.append(dict(
+                            UID='%s-%s' % (brain.UID, fieldname),
+                            url=url,
+                            id='%s-%s' % (brain.getId, fieldname),
+                            quoted_id='%s-%s' % (quoted_id, fieldname),
+                            path=path,
+                            title_or_id=filename,
+                            description="",
+                            obj_type=field.type,
+                            size=size,
+                            icon=icon,
+                            type_class=type_class,
+                            wf_state=review_state,
+                            state_title=state_title,
+                            state_class=state_class,
+                            folderish=False,
+                            relative_url=relative_url,
+                            view_url="%s/at_download/%s" % (url, fieldname),
+                            table_row_class=table_row_class,
+                            thumb=False,
+                            is_expired=is_expired,
+                            is_deleted=False,
+                            is_additional=True,
+                        ))
+
         return results
 
     @property
@@ -385,9 +461,12 @@ class CartContentsTable(object):
 
 class FileCartZip (object):
 
-    def __init__ (self, request, brains):
+    def __init__ (self, request, items):
+        """
+        items are a list of tuples (brain, additional attachment field names)
+        """
         self.request = request
-        self.brains = brains
+        self.items = items
         path = self.createZip ()
         self.downloadZip (path)
 
@@ -397,20 +476,27 @@ class FileCartZip (object):
 
         zip = zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED)
 
-        for brain in self.brains:
+        for brain, additional_attachments in self.items:
             content = brain.getObject()
-            field = content.getPrimaryField()
-            value = field.get(content)
-            file = str(value.data)
-            namelist = zip.namelist()
-            if value.filename not in namelist:
-                filename = value.filename
-            elif content.getId() + '-' + value.filename not in namelist:
-                filename = content.getId() + '-' + value.filename
-            else:
-                filename = content.UID() + '-' + value.filename
+            fields = [content.getPrimaryField()]
+            for fieldname in additional_attachments:
+                fields.append(content.getField(fieldname))
 
-            zip.writestr(filename, file)
+            for field in fields:
+                fieldname = field.__name__
+                value = field.get(content)
+                file = str(value.data)
+                namelist = zip.namelist()
+                if value.filename not in namelist:
+                    filename = value.filename
+                elif content.getId() + '-' + value.filename not in namelist:
+                    filename = content.getId() + '-' + value.filename
+                elif content.getId() + '-' + fieldname + '-' + value.filename not in namelist:
+                    filename = content.getId() + '-' + fieldname + '-' + value.filename
+                else:
+                    filename = content.UID() + '-' + value.filename
+
+                zip.writestr(filename.decode('utf-8'), file)
 
         zip.close()
         return path
