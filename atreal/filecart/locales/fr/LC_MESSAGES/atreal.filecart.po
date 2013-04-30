@@ -209,7 +209,7 @@ msgstr "Votre panier"
 #. Default: "Your selection has been correctly deleted."
 #: ./browser/filecart.py:34
 msgid "fc_deleteok"
-msgstr "Votre sélection a correctement été supprimée de votre panier."
+msgstr "La sélection a été correctement retirée de votre panier."
 
 #. Default: "Your cart is empty. Browse this website to add files to your cart."
 #: ./browser/table.pt:15
