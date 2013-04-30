@@ -45,7 +45,7 @@ class CartProvider (BrowserView) :
     _cart = None
 
     @property
-    def cart (self):
+    def cart(self):
         if self._cart is not None:
             return self._cart
 
@@ -54,14 +54,14 @@ class CartProvider (BrowserView) :
         return self._cart
 
     @property
-    def _options (self):
+    def _options(self):
         _siteroot = queryUtility (IPloneSiteRoot)
         return IFileCartSchema (_siteroot)
 
-    def isCartable (self):
+    def isCartable(self):
         return interfaces.IFileCartable.providedBy(self.context)
 
-    def isEmpty (self):
+    def isEmpty(self):
         return self.cart.size () == 0
 
     def isContextAlreadyInCart(self):
@@ -70,22 +70,22 @@ class CartProvider (BrowserView) :
     def isObjectAlreadyInCart(self, obj):
         return IFileCartProvider(obj).isInCart()
 
-    def getSize (self):
+    def getSize(self):
         return self.cart.size ()
 
-    def getLastItemUID (self):
+    def getLastItemUID(self):
         return self.cart.last_item
 
-    def getLinkAddToCart (self):
+    def getLinkAddToCart(self):
         return self.context.absolute_url() + '/@@filecart-cart?add_item=true'
 
-    def getLinkToCart (self):
+    def getLinkToCart(self):
         return self.context.absolute_url() + '/@@filecart-cart'
 
-    def getLinkToContext (self):
+    def getLinkToContext(self):
         return self.context.absolute_url() + '/view'
 
-    def clearCart (self):
+    def clearCart(self):
         cart_manager = getUtility (interfaces.ICartUtility)
         cart_manager.destroy (self.context)
         self.context.plone_utils.addPortalMessage (self.msg['emptyOk'])
@@ -96,7 +96,7 @@ class CartProvider (BrowserView) :
         else:
             self.context.plone_utils.addPortalMessage(self.msg['deleteOk'])
 
-    def delFromCartMulti (self):
+    def delFromCartMulti(self):
         if self.request.has_key ('uids'):
             uids = self.request.form ['uids']
             for uid in uids:
@@ -109,7 +109,7 @@ class CartProvider (BrowserView) :
         else:
             self.context.plone_utils.addPortalMessage(self.msg['noSelection'])
 
-    def downloadCart (self):
+    def downloadCart(self):
         if self.isEmpty ():
             self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
         else :
@@ -124,14 +124,15 @@ class CartProvider (BrowserView) :
             FileCartZip(self.request, result)
             user = getSecurityManager().getUser().getId()
             comment = dict(
-                user = user,
-                date = DateTime(),
-                comment = self.request.form['filecart_download_comment'],)
+                user=user,
+                date=DateTime(),
+                comment=self.request.form.get('filecart_download_comment', ''),)
+
             filecartcommentsutility = getUtility(interfaces.IFileCartCommentsUtility)
             filecartcommentsutility.commentDownload(self.context, result, comment)
             self.context.plone_utils.addPortalMessage(self.msg['download'])
 
-    def addToCart( self ):
+    def addToCart(self):
         # create a line item and add it to the cart
         if self.isCartable():
             if IFileCartProvider(self.context).addToCart() is False:
@@ -142,7 +143,7 @@ class CartProvider (BrowserView) :
             self.context.plone_utils.addPortalMessage(self.msg['notCartable'])
 
 
-    def addToCartMulti (self, obj):
+    def addToCartMulti(self, obj):
         # create a line item and add it to the cart
         if self.isObjectAlreadyInCart(obj):
             self.context.plone_utils.addPortalMessage(self.msg['alreadyExist'])
@@ -192,7 +193,7 @@ class CartContentsTable(object):
         return self.table.render()
 
     @property
-    def cart (self):
+    def cart(self):
         if self._cart is not None:
             return self._cart
 
@@ -473,25 +474,30 @@ class FileCartView(CartProvider) :
         icon = ploneview.getIcon(self.context)
         return icon.html_tag()
 
+
 def filename_only(contet, field, value):
     return value.filename
+
 
 def id_and_filename(content, field, value):
     return "%s-%s" % (content.getId(), value.filename)
 
+
 def id_fieldname_and_filename(content, field, value):
     return "%s-%s-%s" % (content.getId(), field.__name__, value.filename)
 
+
 def uid_and_filename(content, field, value):
     return "%s-%s" % (content.UID(), value.filename)
+
 
 NAMING_POLICIES = [filename_only, id_and_filename,
                    id_fieldname_and_filename, uid_and_filename]
 
 
-class FileCartZip (object):
+class FileCartZip(object):
 
-    def __init__ (self, request, items):
+    def __init__(self, request, items):
         """
         items are a list of tuples (brain, additional attachment field names)
         """
@@ -500,7 +506,7 @@ class FileCartZip (object):
         path = self.createZip ()
         self.downloadZip (path)
 
-    def createZip (self):
+    def createZip(self):
         fd, path = tempfile.mkstemp('.zip')
         os.close(fd)
 
@@ -560,7 +566,7 @@ class FileCartZip (object):
         zip.close()
         return path
 
-    def downloadZip (self, path):
+    def downloadZip(self, path):
         filename = "cart-" + time.strftime('%y%m%d-%H%M',time.localtime()) + ".zip"
         RESPONSE = self.request.RESPONSE
         RESPONSE.setHeader('content-type', 'application/zip')
@@ -575,8 +581,10 @@ class FileCartZip (object):
                 RESPONSE.write(data)
             else:
                 break
+
         fp.close()
         os.remove(path)
+
 
 class FileCartKSSView(TableKSSView):
     table = CartContentsTable
