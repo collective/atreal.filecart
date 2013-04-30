@@ -1,16 +1,15 @@
 from persistent import Persistent
+from persistent.list import PersistentList
 
 from zope import component
 from zope.interface import implements
-from persistent.list import PersistentList
+from zope.annotation.interfaces import IAttributeAnnotatable
 try:
     from zope.intid.interfaces import IIntIds
     from zope.container.interfaces import ILocation
 except ImportError:
     from zope.app.intid.interfaces import IIntIds
     from zope.app.container.interfaces import ILocation
-
-from zope.annotation.interfaces import IAttributeAnnotatable
 
 from atreal.filecart.interfaces import ILineItem, IFileCartable
 
@@ -24,7 +23,7 @@ class LineItem( Persistent ):
     limited set of components that use annotations on line items, specifically the
     workflow engine to enable fulfillment workflows on individual items.
     """
-    implements( ILineItem, IAttributeAnnotatable )
+    implements(ILineItem, IAttributeAnnotatable)
 
     # default attribute values, item_id is required and has no default
     name = ""
@@ -33,17 +32,19 @@ class LineItem( Persistent ):
     uid = None
 
 
-    def clone( self ):
+    def clone(self):
         clone = self.__class__.__new__( self.__class__ )
         clone.__setstate__( self.__getstate__() )
         if ILocation.providedBy( clone ):
             del clone.__name__, clone.__parent__
         return clone
 
-    def resolve( self ):
+    def resolve(self):
         utility = component.getUtility( IIntIds )
         return utility.queryObject( self.uid )
 
+    def set_scales(self, scales):
+        self.scales = PersistentList(scales)
 
 
 class LineItemFactory( object ):
@@ -115,4 +116,3 @@ class LineItemFactory( object ):
                     PersistentList(additional_attachments))
 
         return nitem
-

@@ -96,7 +96,8 @@ class FileCartCommentsUtility(object):
     def commentDownload(self, context, items, comment):
         bad_objects = []
         i = 0
-        for brain, additional_attachments in items:
+        for item in items:
+            brain = item['brain']
             try:
                 IFileCartComments(brain.getObject()).setComment(comment)
                 i += 1

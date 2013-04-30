@@ -1,33 +1,31 @@
-from zope.component import getMultiAdapter, queryUtility, getUtility
-from zope.size import byteDisplay
-
-from AccessControl import getSecurityManager
-
-from Products.Five.browser import BrowserView
-from Products.CMFCore.utils import getToolByName
-from Products.CMFPlone.interfaces import IPloneSiteRoot
-
-from zope.interface.interfaces import IInterface
-
 import os
 import tempfile
 import zipfile
 import time
-from DateTime import DateTime
-
-from plone.memoize import instance
-from Acquisition import aq_inner
 import urllib
+
+from DateTime import DateTime
+from AccessControl import getSecurityManager
+from Acquisition import aq_inner
 from OFS.interfaces import IOrderedContainer
+from zope.interface.interfaces import IInterface
+from zope.component import getMultiAdapter, queryUtility, getUtility
+from zope.i18n import translate
+from zope.size import byteDisplay
+from zope.component.hooks import getSite
+
+from Products.Five.browser import BrowserView
+from Products.CMFCore.utils import getToolByName
+from Products.CMFPlone.interfaces import IPloneSiteRoot
+from plone.memoize import instance
 
 from atreal.filecart import FileCartMessageFactory as _
 from atreal.filecart import interfaces
 from atreal.filecart.content import LineItemFactory
 from atreal.filecart.browser.controlpanel import IFileCartSchema
 from atreal.filecart.browser.tableview import Table, TableKSSView
+from atreal.filecart.interfaces import IFileCartProvider
 
-from atreal.filecart.interfaces import IFileCartable, IFileCartProvider
-from zope.i18n import translate
 
 class CartProvider (BrowserView) :
     """
@@ -50,6 +48,7 @@ class CartProvider (BrowserView) :
     def cart (self):
         if self._cart is not None:
             return self._cart
+
         cart_manager = getUtility (interfaces.ICartUtility)
         self._cart = cart_manager.get (self.context, create=True)
         return self._cart
@@ -63,8 +62,7 @@ class CartProvider (BrowserView) :
         return interfaces.IFileCartable.providedBy(self.context)
 
     def isEmpty (self):
-        if self.cart.size () == 0:
-            return True
+        return self.cart.size () == 0
 
     def isContextAlreadyInCart(self):
         return IFileCartProvider(self.context).isInCart()
@@ -119,7 +117,9 @@ class CartProvider (BrowserView) :
             for uid, item in self.cart.items ():
                 pc = self.context.portal_catalog(UID=uid)
                 if len(pc) != 0:
-                    result.append ((pc[0], getattr(item, 'additional_attachments', [])))
+                    result.append({'brain': pc[0],
+                                   'additional_attachments': getattr(item, 'additional_attachments', []),
+                                   'scales': getattr(item, 'scales', ['_source'])})
 
             FileCartZip(self.request, result)
             user = getSecurityManager().getUser().getId()
@@ -223,8 +223,8 @@ class CartContentsTable(object):
         """
         context, request = self.context, self.request
         plone_utils = getToolByName(context, 'plone_utils')
-        plone_view = getMultiAdapter((context, self.request), name=u'plone')
         portal_workflow = getToolByName(context, 'portal_workflow')
+        getTitleForStateOnType = portal_workflow.getTitleForStateOnType
         portal_properties = getToolByName(context, 'portal_properties')
         site_properties = portal_properties.site_properties
         mimetypes_registry = getToolByName(context, 'mimetypes_registry')
@@ -275,8 +275,7 @@ class CartContentsTable(object):
                 obj_type = brain.portal_type
 
                 is_expired = context.isExpired(brain)
-                state_title = portal_workflow.getTitleForStateOnType(review_state,
-                                                                     obj_type)
+                state_title = getTitleForStateOnType(review_state, obj_type)
                 quoted_id = urllib.quote_plus(brain.getId)
 
                 if obj_type in use_view_action:
@@ -289,7 +288,7 @@ class CartContentsTable(object):
                 elif brain.portal_type == "Image":
                     thumb = url+'/image_thumb'
                 elif albumview:
-                    thumb = "%s/rf_%s" % (context.portal_url(), brain.getIcon)
+                    thumb = "%s/rf_%s" % (portal_url, brain.getIcon)
                 else:
                     thumb = False
 
@@ -306,17 +305,19 @@ class CartContentsTable(object):
                     icon=brain.getIcon,
                     type_class=type_class,
                     wf_state=review_state,
-                    state_title= portal_workflow.getTitleForStateOnType(review_state,
-                                                               obj_type),
-                    state_class= state_class,
-                    folderish= brain.is_folderish,
-                    relative_url= relative_url,
-                    view_url= view_url,
-                    table_row_class = table_row_class,
+                    state_title=getTitleForStateOnType(review_state, obj_type),
+                    state_class=state_class,
+                    folderish=brain.is_folderish,
+                    relative_url=relative_url,
+                    view_url=view_url,
+                    table_row_class=table_row_class,
                     thumb=thumb,
                     is_expired=is_expired,
                     is_deleted=False,
-                    fieldname=None
+                    is_additional=False,
+                    fieldname=None,
+                    lineitem=item,
+                    brain=brain,
                 ))
 
             # ##### additional fields # #########
@@ -347,12 +348,12 @@ class CartContentsTable(object):
                         filename = value.filename
                         icon = mimetypes_registry.lookupExtension(filename).icon_path
                         size = byteDisplay(value.get_size())
+                        size = translate(size, context=request, target_language='en')
 
                         type_class = 'contenttype-' + plone_utils.normalizeString(
                             brain.portal_type) + '-' + field.type
                         # for the moment, content sizes are not translated,
                         # so we don't translate additional fields sizes
-                        size = translate(size, context=self.request, target_language='en')
 
                         results.append(dict(
                             UID='%s-%s' % (brain.UID, fieldname),
@@ -378,6 +379,8 @@ class CartContentsTable(object):
                             is_deleted=False,
                             is_additional=True,
                             fieldname=fieldname,
+                            lineitem=item,
+                            brain=brain,
                         ))
 
         return results
@@ -437,18 +440,18 @@ class FileCartView(CartProvider) :
     __table__ = CartContentsTable
 
     def __call__(self):
-        if self.request.has_key ('cart.actions.delete'):
+        if self.request.has_key('cart.actions.delete'):
             self.delFromCartMulti()
-        elif self.request.has_key ('cart.actions.clear'):
+        elif self.request.has_key('cart.actions.clear'):
             self.clearCart()
-        elif self.request.has_key ('cart.actions.download'):
+        elif self.request.has_key('cart.actions.download'):
             self.downloadCart()
-        elif self.request.has_key ('add_item'):
+        elif self.request.has_key('add_item'):
             self.addToCart()
-        elif self.request.has_key ('del_item'):
+        elif self.request.has_key('del_item'):
             self.delFromCart(fieldname=self.request.get('fieldname'))
-        elif self.request.has_key ('add_items'):
-            reference_tool = getToolByName (self.context, 'reference_catalog')
+        elif self.request.has_key('add_items'):
+            reference_tool = getToolByName(self.context, 'reference_catalog')
             if self.request.form.has_key('choix[]'):
                 listchoix = self.request.form['choix[]']
                 if type(listchoix)==str:
@@ -470,6 +473,21 @@ class FileCartView(CartProvider) :
         icon = ploneview.getIcon(self.context)
         return icon.html_tag()
 
+def filename_only(contet, field, value):
+    return value.filename
+
+def id_and_filename(content, field, value):
+    return "%s-%s" % (content.getId(), value.filename)
+
+def id_fieldname_and_filename(content, field, value):
+    return "%s-%s-%s" % (content.getId(), field.__name__, value.filename)
+
+def uid_and_filename(content, field, value):
+    return "%s-%s" % (content.UID(), value.filename)
+
+NAMING_POLICIES = [filename_only, id_and_filename,
+                   id_fieldname_and_filename, uid_and_filename]
+
 
 class FileCartZip (object):
 
@@ -487,8 +505,14 @@ class FileCartZip (object):
         os.close(fd)
 
         zip = zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED)
+        mttool = getToolByName(getSite(), 'mimetypes_registry')
+        for item in self.items:
+            brain = item['brain']
+            additional_attachments = item['additional_attachments']
+            scales = item.get('scales', None)
+            if scales is None:
+                scales = ['_source']
 
-        for brain, additional_attachments in self.items:
             content = brain.getObject()
             fields = [content.getPrimaryField()]
             for fieldname in additional_attachments:
@@ -497,18 +521,36 @@ class FileCartZip (object):
             for field in fields:
                 fieldname = field.__name__
                 value = field.get(content)
-                file = str(value.data)
                 namelist = zip.namelist()
-                if value.filename not in namelist:
-                    filename = value.filename
-                elif content.getId() + '-' + value.filename not in namelist:
-                    filename = content.getId() + '-' + value.filename
-                elif content.getId() + '-' + fieldname + '-' + value.filename not in namelist:
-                    filename = content.getId() + '-' + fieldname + '-' + value.filename
-                else:
-                    filename = content.UID() + '-' + value.filename
+                for naming_policy in NAMING_POLICIES:
+                    filename = naming_policy(content, field, value)
+                    if filename not in namelist:
+                        break
 
-                zip.writestr(filename.decode('utf-8'), file)
+                if (not scales) or ('_source' in scales):
+                    zip.writestr(filename.decode('utf-8'), str(value.data))
+
+                for scale in scales:
+                    if scale == '_source':
+                        continue
+
+                    scale_value = field.getScale(content, scale)
+                    scale_content_type = scale_value.getContentType()
+                    scale_mimetype = mttool.lookup(scale_content_type)[0]
+                    if scale_content_type == value.getContentType():
+                        scale_extension = value.filename.split('.', -1)[-1]
+                    elif 'jpg' in scale_mimetype.extensions:
+                        # non web images thumbs are in jpeg format.
+                        # priority to 'jpg' extension
+                        scale_extension = 'jpg'
+                    else:
+                        scale_extension = scale_mimetype.extensions[0]
+
+                    scale_filename_base = filename.split('.', -1)[0]
+                    scale_filename = "%s-%s.%s" % (scale_filename_base,
+                                                   scale, scale_extension)
+                    zip.writestr(scale_filename.decode('utf-8'),
+                                 str(scale_value.data))
 
         zip.close()
         return path

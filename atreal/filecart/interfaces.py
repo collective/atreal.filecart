@@ -23,8 +23,19 @@ class ILineItem (Interface):
     name = schema.TextLine(title = _(u"Name"))
     description = schema.TextLine( title = _(u"Description"))
     size = schema.Float( title = _(u"Size"))
+    additional_attachments = schema.List(value_type=schema.ASCIILine(),
+                                         title=_(u"List of additional file fields of content in the cart"))
+    scales = schema.List(value_type=schema.ASCIILine(),
+                        title=_(u"List of scales of image content in the cart"))
+
     def resolve ():
         """ Return the cartable object, or None if can't be found.
+        """
+
+    def set_scales(scales):
+        """ Set the image scales of the cartable object selected in the cart
+        '_source' is the name for the main file
+        If scales is not set, only the main file is considered to be carted
         """
 
 class ILineItemFactory (Interface):

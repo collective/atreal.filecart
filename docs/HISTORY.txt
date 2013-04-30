@@ -6,6 +6,10 @@ Changelog for atreal.filecart
 1.1 (Unreleased)
 ----------------
 
+    - Extend api so that we can select scales of a carted image.
+      The selected scales are exported in the zip file.
+      [thomasdesvenain]
+
     - If we add to cart documents that have many file / image fields,
       we manage those fields in our cart:
       we can include each of them in zip or not.
@@ -14,12 +18,11 @@ Changelog for atreal.filecart
     - On zip export, use if possible filename instead of content id.
       [thomasdesvenain]
 
-    - Avoid doubles in zip export.
+    - Avoid file name doubloons in zip export.
       [thomasdesvenain]
 
     - Works under Plone 4.3.
       [thomasdesvenain]
-
 
 Version 1.0.0rc1 - 2009-12-22
 -----------------------------
