@@ -446,7 +446,6 @@ class FileCartView(CartProvider) :
         elif self.request.has_key ('add_item'):
             self.addToCart()
         elif self.request.has_key ('del_item'):
-            import pdb;pdb.set_trace()
             self.delFromCart(fieldname=self.request.get('fieldname'))
         elif self.request.has_key ('add_items'):
             reference_tool = getToolByName (self.context, 'reference_catalog')
