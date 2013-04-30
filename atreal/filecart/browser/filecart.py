@@ -165,7 +165,8 @@ class CartActionProvider(BrowserView):
         """
         return interfaces.IFileCartProvider(self.context).isInCart()
 
-class FileCartView (CartProvider) :
+
+class FileCartView(CartProvider) :
     """
     """
 
@@ -189,6 +190,7 @@ class FileCartView (CartProvider) :
                 else:
                     for uuid in listchoix:
                         self.addToCartMulti (reference_tool.lookupObject(uuid))
+
         return super(FileCartView, self).__call__()
 
     def contents_table (self):
@@ -202,11 +204,14 @@ class FileCartView (CartProvider) :
         icon = ploneview.getIcon(self.context)
         return icon.html_tag()
 
+
 class CartContentsTable(object):
     """
     The foldercontents table renders the table and its actions.
     """
     _cart = None
+
+    __table__ = Table
 
     def __init__(self, context, request):
         self.context = context
@@ -217,7 +222,7 @@ class CartContentsTable(object):
 
         url = self.context.absolute_url()
         view_url = url + '/@@filecart-cart'
-        self.table = Table(request, url, view_url, self.items,
+        self.table = self.__table__(request, url, view_url, self.items,
                            show_sort_column=self.show_sort_column,
                            buttons=self.buttons, pagesize=self.pagesize,
                            ispreviewenabled=self.ispreviewenabled)
@@ -229,6 +234,7 @@ class CartContentsTable(object):
     def cart (self):
         if self._cart is not None:
             return self._cart
+
         cart_manager = getUtility (interfaces.ICartUtility)
         self._cart = cart_manager.get (self.context, create=True)
         return self._cart
@@ -238,6 +244,7 @@ class CartContentsTable(object):
         """
         if queryUtility(IInterface, name=u'atreal.override.albumview.IOverrideAlbumViewSite', default=False):
             return True
+
         return False
 
     def isRichFileImageInstalled(self):
@@ -245,6 +252,7 @@ class CartContentsTable(object):
         """
         if queryUtility(IInterface, name=u'atreal.richfile.image.IRichFileImageSite', default=False):
             return True
+
         return False
 
     @property
