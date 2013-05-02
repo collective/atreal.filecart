@@ -1,4 +1,9 @@
 import time
+from UserDict import DictMixin
+
+from persistent import Persistent
+from persistent.mapping import PersistentMapping
+from persistent.list import PersistentList
 
 from zope.interface import implements
 from zope.annotation.interfaces import IAnnotations
@@ -7,10 +12,6 @@ from Products.CMFCore.utils import getToolByName
 
 from atreal.filecart.interfaces import IFileCartComments, IFileCartCommentsUtility
 
-from UserDict import DictMixin
-from persistent import Persistent
-from persistent.mapping import PersistentMapping
-from persistent.list import PersistentList
 
 class OrderedPersistentDict(DictMixin, Persistent):
     def __init__(self, data=None):
@@ -23,6 +24,7 @@ class OrderedPersistentDict(DictMixin, Persistent):
         self._data[key] = val
         if key in self._keylist:
             self._keylist.remove(key)
+
         self._keylist.append(key)
 
     def __getitem__(self, key):
@@ -63,6 +65,7 @@ class FileCartComments(object):
             if not annotations.has_key(self.key):
                 annotations[self.key] = OrderedPersistentDict()
             self._comments = annotations[self.key]
+
         return self._comments
 
     def hasComments(self):
@@ -104,6 +107,7 @@ class FileCartCommentsUtility(object):
             except:
                 bad_objects.append(brain.getPath())
                 continue
+
         return i, bad_objects
 
     def cleanAllComments(self, context):
@@ -120,5 +124,6 @@ class FileCartCommentsUtility(object):
             except:
                 bad_objects.append(brain.getPath())
                 continue
+
         return i, bad_objects
 
