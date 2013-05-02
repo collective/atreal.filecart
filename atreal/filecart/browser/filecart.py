@@ -178,7 +178,6 @@ class CartContentsTable(object):
     def __init__(self, context, request):
         self.context = context
         self.request = request
-        #self.cart = cart
         self.pagesize = 20
         self.ispreviewenabled = True
 
@@ -293,7 +292,7 @@ class CartContentsTable(object):
                 else:
                     thumb = False
 
-                results.append(dict(
+                object_info = dict(
                     UID=brain.UID,
                     url=url,
                     id=brain.getId,
@@ -319,7 +318,8 @@ class CartContentsTable(object):
                     fieldname=None,
                     lineitem=item,
                     brain=brain,
-                ))
+                )
+                results.append(object_info)
 
             # ##### additional fields # #########
             if hasattr(item, 'additional_attachments'):
@@ -356,7 +356,7 @@ class CartContentsTable(object):
                         # for the moment, content sizes are not translated,
                         # so we don't translate additional fields sizes
 
-                        results.append(dict(
+                        attachment_info = dict(
                             UID='%s-%s' % (brain.UID, fieldname),
                             url=url,
                             id='%s-%s' % (brain.getId, fieldname),
@@ -382,7 +382,8 @@ class CartContentsTable(object):
                             fieldname=fieldname,
                             lineitem=item,
                             brain=brain,
-                        ))
+                        )
+                        results.append(attachment_info)
 
         return results
 
@@ -450,22 +451,25 @@ class FileCartView(CartProvider) :
         elif self.request.has_key('add_item'):
             self.addToCart()
         elif self.request.has_key('del_item'):
-            self.delFromCart(fieldname=self.request.get('fieldname'))
+            self.delFromCart(fieldname=self.request.get('fieldname', False))
         elif self.request.has_key('add_items'):
             reference_tool = getToolByName(self.context, 'reference_catalog')
             if self.request.form.has_key('choix[]'):
                 listchoix = self.request.form['choix[]']
-                if type(listchoix)==str:
-                    self.addToCartMulti (reference_tool.lookupObject(listchoix))
+                if type(listchoix) == str:
+                    self.addToCartMulti(reference_tool.lookupObject(listchoix))
                 else:
                     for uuid in listchoix:
-                        self.addToCartMulti (reference_tool.lookupObject(uuid))
+                        self.addToCartMulti(reference_tool.lookupObject(uuid))
 
         return super(FileCartView, self).__call__()
 
+    @property
+    def table(self):
+        return self.__table__(self.context, self.request)
+
     def contents_table (self):
-        table = self.__table__(self.context, self.request)
-        return table.render()
+        return self.table.render()
 
     def icon(self):
         """
