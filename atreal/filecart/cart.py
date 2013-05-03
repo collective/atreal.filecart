@@ -13,7 +13,6 @@ except:
 
 from Products.CMFCore.utils import getToolByName
 
-
 from atreal.filecart.content import LineItemFactory
 from atreal.filecart.interfaces import IFileCartProvider, ICart, ICartUtility
 
@@ -22,7 +21,6 @@ class FileCartProvider(object):
     """
     """
     implements(IFileCartProvider)
-
     _cart = None
 
     def __init__(self, context):
@@ -34,6 +32,7 @@ class FileCartProvider(object):
     def cart(self):
         if self._cart is not None:
             return self._cart
+
         cart_manager = queryUtility(ICartUtility)
         self._cart = cart_manager.get(self.context, create=True)
         return self._cart
@@ -43,6 +42,7 @@ class FileCartProvider(object):
         """
         if self.isInCart():
             return False
+
         item_factory = LineItemFactory(self.cart, self.context)
         item_factory.create()
         return True
@@ -66,8 +66,8 @@ class FileCartProvider(object):
         """
         if self.context.UID() in self.cart:
             return True
-        return False
 
+        return False
 
 class Cart (OrderedContainer):
     """ A file cart
@@ -126,42 +126,43 @@ class CartUtility (Persistent):
                     session_cart.member_id = uid
                     self._sessions[uid] = session_cart
                     self._destroyCartForSession(context)
+
                 return self._getCartForUser(context, uid, create)
             else:
                 return self._getCartForSession(context, create)
-
 
     def _getCartForUser(self, context, uid, create=False):
         cart = self._sessions.get(uid)
         if cart or not create:
             return cart
+
         cart = Cart()
         cart.member_id = uid
         self._sessions[uid] = cart
         return cart
-
 
     def _getCartForSession(self, context, create=False, browser_id=None):
         session_manager = getToolByName(context, 'session_data_manager')
         if browser_id is None:
             if not session_manager.hasSessionData() and not create:
                 return
+
             session = session_manager.getSessionData()
         else:
             session = session_manager.getSessionDataByKey(browser_id)
             if session is None:
                 return
+
         if not session.has_key('getpaid.cart'):
             if create:
                 session['getpaid.cart'] = cart = Cart()
             else:
                 return None
+
         return session['getpaid.cart']
 
     def _getDisposableCart(self, context, browser_id=None):
         return Cart()
-
-
 
     def destroy(self, context, key=None):
         """ Destroy the cart.
@@ -179,11 +180,9 @@ class CartUtility (Persistent):
             else:
                 return self._destroyCartForSession(context)
 
-
     def _destroyCartForUser(self, context, uid):
         if self._sessions.has_key(uid):
             del self._sessions[uid]
-
 
     def _destroyCartForSession(self, context, browser_id=None):
         session_manager = getToolByName(context, 'session_data_manager')
@@ -195,8 +194,10 @@ class CartUtility (Persistent):
             session = session_manager.getSessionDataByKey(browser_id)
             if session is None:
                 return
+
         if not session.has_key('getpaid.cart'):
             return
+
         del session['getpaid.cart']
 
 
@@ -211,22 +212,23 @@ class CartUtility (Persistent):
             session_manager = getToolByName(context, 'session_data_manager')
             if not session_manager.hasSessionData():
                 return None
+
             session = session_manager.getSessionData()
             if not session.has_key('getpaid.cart'):
                 return None
-            return 'session:%s' % session.token
 
+            return 'session:%s' % session.token
 
     def _decodeKey(self, key):
         try:
             name, value = key.split(':', 1)
         except ValueError:
             raise ValueError('Malformed key: %s' % key)
+
         if name not in ['user', 'session', 'oneshot']:
             raise ValueError('Malformed key: %s' % key)
-        return name, value
 
+        return name, value
 
     def manage_fixupOwnershipAfterAdd(self):
         pass
-
