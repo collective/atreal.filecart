@@ -99,8 +99,11 @@ class FileCartZip(object):
         self.zip.close()
         return path
 
+    def _cart_filename(self):
+        return "cart-" + time.strftime('%y%m%d-%H%M',time.localtime()) + ".zip"
+
     def downloadZip(self, path):
-        filename = "cart-" + time.strftime('%y%m%d-%H%M',time.localtime()) + ".zip"
+        filename = self._cart_filename()
         RESPONSE = self.request.RESPONSE
         RESPONSE.setHeader('content-type', 'application/zip')
         RESPONSE.setHeader('content-disposition',
