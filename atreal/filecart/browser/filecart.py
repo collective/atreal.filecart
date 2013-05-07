@@ -106,19 +106,23 @@ class CartProvider (BrowserView) :
         else:
             self.context.plone_utils.addPortalMessage(self.msg['noSelection'])
 
-    def downloadCart(self):
-        if self.isEmpty ():
-            self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
-        else :
-            result = []
-            for uid, item in self.cart.items ():
-                pc = self.context.portal_catalog(UID=uid)
-                if len(pc) != 0:
-                    result.append({'brain': pc[0],
-                                   'additional_attachments': getattr(item, 'additional_attachments', []),
-                                   'scales': getattr(item, 'scales', ['_source'])})
+    def _cartContents(self):
+        result = []
+        for uid, item in self.cart.items ():
+            pc = self.context.portal_catalog(UID=uid)
+            if len(pc) != 0:
+                result.append({'brain': pc[0],
+                               'additional_attachments': getattr(item, 'additional_attachments', []),
+                               'scales': getattr(item, 'scales', ['_source'])})
 
-            self.__filecartzip__(self.request, result)
+        return result
+
+    def downloadCart(self):
+        if self.isEmpty():
+            self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
+        else:
+            contents = self._cartContents()
+            self.__filecartzip__(self.request, )
             user = getSecurityManager().getUser().getId()
             comment = dict(
                 user=user,
@@ -126,7 +130,7 @@ class CartProvider (BrowserView) :
                 comment=self.request.form.get('filecart_download_comment', ''),)
 
             filecartcommentsutility = getUtility(interfaces.IFileCartCommentsUtility)
-            filecartcommentsutility.commentDownload(self.context, result, comment)
+            filecartcommentsutility.commentDownload(self.context, contents, comment)
             self.context.plone_utils.addPortalMessage(self.msg['download'])
 
     def addToCart(self):
@@ -170,13 +174,12 @@ class CartContentsTable(object):
     _cart = None
 
     __table__ = Table
+    pagesize = 20
+    ispreviewenabled = True
 
     def __init__(self, context, request):
         self.context = context
         self.request = request
-        self.pagesize = 20
-        self.ispreviewenabled = True
-
         url = self.context.absolute_url()
         view_url = url + '/@@filecart-cart'
         self.table = self.__table__(request, url, view_url, self.items,
