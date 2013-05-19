@@ -122,7 +122,7 @@ class CartProvider (BrowserView) :
             self.context.plone_utils.addPortalMessage(self.msg['isEmpty'])
         else:
             contents = self._cartContents()
-            self.__filecartzip__(self.request, )
+            self.__filecartzip__(self.request, contents)
             user = getSecurityManager().getUser().getId()
             comment = dict(
                 user=user,
