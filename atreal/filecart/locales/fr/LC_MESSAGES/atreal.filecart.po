@@ -189,7 +189,7 @@ msgstr "Nettoyer tout"
 #. Default: "Your selection has been correctly added to your Cart."
 #: ./browser/filecart.py:33
 msgid "fc_addok"
-msgstr "Votre sélection a correctement été ajoutée à votre panier."
+msgstr "La sélection été ajoutée à votre panier."
 
 #. Default: "This element already exists in your Cart."
 #: ./browser/filecart.py:35
@@ -209,7 +209,7 @@ msgstr "Votre panier"
 #. Default: "Your selection has been correctly deleted."
 #: ./browser/filecart.py:34
 msgid "fc_deleteok"
-msgstr "La sélection a été correctement retirée de votre panier."
+msgstr "La sélection a été retirée de votre panier."
 
 #. Default: "Your cart is empty. Browse this website to add files to your cart."
 #: ./browser/table.pt:15
