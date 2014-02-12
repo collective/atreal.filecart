@@ -5,6 +5,8 @@ Changelog for atreal.filecart
 
 1.1 (Unreleased)
 ----------------
+    - Remove IntIds utility from profile to avoid to clear catalog when installing the product."
+      [cedricmessiant]
 
     - Exclude empty file fields from zip.
       [thomasdesvenain]

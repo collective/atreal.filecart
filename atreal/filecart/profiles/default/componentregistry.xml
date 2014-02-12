@@ -10,9 +10,6 @@
      interface="atreal.filecart.interfaces.ICartUtility"
      factory="atreal.filecart.cart.CartUtility" />
   <utility
-     interface="zope.intid.interfaces.IIntIds"
-     factory="five.intid.intid.IntIds" />
-  <utility
      interface="atreal.filecart.interfaces.IFileCartMarkerUtility"
      factory="atreal.filecart.marker.FileCartMarkerUtility" />
   <utility
