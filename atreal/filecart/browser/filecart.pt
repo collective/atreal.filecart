@@ -20,13 +20,6 @@
           Cart
       </h1>
 
-      <a href=""
-         class="link-parent"
-         tal:attributes="href view/getLinkToContext"
-         i18n:translate="go_to_contentrules_assignment_context">
-         Return
-      </a>
-
       <p class="documentDescription" i18n:translate="fc_cart_size">
           Votre cart contient <span tal:content="view/getSize" i18n:name="size" /> items !!!
       </p>
