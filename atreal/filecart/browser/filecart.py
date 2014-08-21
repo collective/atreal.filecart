@@ -195,8 +195,8 @@ class CartContentsTable(object):
         if self._cart is not None:
             return self._cart
 
-        cart_manager = getUtility (interfaces.ICartUtility)
-        self._cart = cart_manager.get (self.context, create=True)
+        cart_manager = getUtility(interfaces.ICartUtility)
+        self._cart = cart_manager.get(self.context, create=True)
         return self._cart
 
     def isOverrideAlbumViewInstalled(self):
