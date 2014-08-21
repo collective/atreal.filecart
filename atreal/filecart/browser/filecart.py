@@ -320,69 +320,69 @@ class CartContentsTable(object):
                 )
                 results.append(object_info)
 
-            # ##### additional fields # #########
-            if hasattr(item, 'additional_attachments'):
-                obj = brain.getObject()
-                for fieldname in item.additional_attachments:
-                    i += 1
-                    table_row_class = "additional draggable "
-                    table_row_class += (i + 1) % 2 == 0 and "even" or "odd"
-                    if len(pc) == 0:
-                        table_row_class += " deleted"
-                        results.append(dict(
-                            UID=uid,
-                            id=item.name + '-' + fieldname,
-                            title_or_id="%s (%s)" % (item.name, fieldname),
-                            is_deleted=True,
-                            table_row_class=table_row_class,
-                        ))
-                    else:
+                # ##### additional fields # #########
+                if hasattr(item, 'additional_attachments'):
+                    obj = brain.getObject()
+                    for fieldname in item.additional_attachments:
+                        i += 1
+                        table_row_class = "additional draggable "
+                        table_row_class += (i + 1) % 2 == 0 and "even" or "odd"
+                        if len(pc) == 0:
+                            table_row_class += " deleted"
+                            results.append(dict(
+                                UID=uid,
+                                id=item.name + '-' + fieldname,
+                                title_or_id="%s (%s)" % (item.name, fieldname),
+                                is_deleted=True,
+                                table_row_class=table_row_class,
+                            ))
+                        else:
 
-                        state_class = 'state-' + plone_utils.normalizeString(review_state)
-                        relative_url = brain.getURL(relative=True)
-                        obj_type = obj.portal_type
-                        view_url = obj_type in use_view_action and (url + '/view') or url
+                            state_class = 'state-' + plone_utils.normalizeString(review_state)
+                            relative_url = brain.getURL(relative=True)
+                            obj_type = obj.portal_type
+                            view_url = obj_type in use_view_action and (url + '/view') or url
 
-                        field = obj.getField(fieldname)
-                        value = field.get(obj)
-                        filename = value.filename
-                        icon = mimetypes_registry.lookupExtension(filename).icon_path
-                        size = byteDisplay(value.get_size())
-                        size = translate(size, context=request, target_language='en')
+                            field = obj.getField(fieldname)
+                            value = field.get(obj)
+                            filename = value.filename
+                            icon = mimetypes_registry.lookupExtension(filename).icon_path
+                            size = byteDisplay(value.get_size())
+                            size = translate(size, context=request, target_language='en')
 
-                        type_class = 'contenttype-' + plone_utils.normalizeString(
-                            brain.portal_type) + '-' + field.type
-                        # for the moment, content sizes are not translated,
-                        # so we don't translate additional fields sizes
+                            type_class = 'contenttype-' + plone_utils.normalizeString(
+                                brain.portal_type) + '-' + field.type
+                            # for the moment, content sizes are not translated,
+                            # so we don't translate additional fields sizes
 
-                        attachment_info = dict(
-                            UID='%s-%s' % (brain.UID, fieldname),
-                            url=url,
-                            id='%s-%s' % (brain.getId, fieldname),
-                            quoted_id='%s-%s' % (quoted_id, fieldname),
-                            path=path,
-                            title_or_id=filename,
-                            description="",
-                            obj_type=field.type,
-                            size=size,
-                            icon=icon,
-                            type_class=type_class,
-                            wf_state=review_state,
-                            state_title=state_title,
-                            state_class=state_class,
-                            folderish=False,
-                            relative_url=relative_url,
-                            view_url="%s/at_download/%s" % (url, fieldname),
-                            table_row_class=table_row_class,
-                            thumb=False,
-                            is_expired=is_expired,
-                            is_deleted=False,
-                            is_additional=True,
-                            fieldname=fieldname,
-                            lineitem=item,
-                            brain=brain,
-                        )
-                        results.append(attachment_info)
+                            attachment_info = dict(
+                                UID='%s-%s' % (brain.UID, fieldname),
+                                url=url,
+                                id='%s-%s' % (brain.getId, fieldname),
+                                quoted_id='%s-%s' % (quoted_id, fieldname),
+                                path=path,
+                                title_or_id=filename,
+                                description="",
+                                obj_type=field.type,
+                                size=size,
+                                icon=icon,
+                                type_class=type_class,
+                                wf_state=review_state,
+                                state_title=state_title,
+                                state_class=state_class,
+                                folderish=False,
+                                relative_url=relative_url,
+                                view_url="%s/at_download/%s" % (url, fieldname),
+                                table_row_class=table_row_class,
+                                thumb=False,
+                                is_expired=is_expired,
+                                is_deleted=False,
+                                is_additional=True,
+                                fieldname=fieldname,
+                                lineitem=item,
+                                brain=brain,
+                            )
+                            results.append(attachment_info)
 
         return results
 
