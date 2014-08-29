@@ -11,6 +11,7 @@
     <include package="five.intid" file="base.zcml" />
     <include package="atreal.override.albumview" />
     <include package="plone.app.kss" />
+    <include package="plone.behavior" file="meta.zcml" />
 
 
     <!-- -->
@@ -19,17 +20,17 @@
 
     <!-- Permissions -->
     <permission
-	id="atreal.filecart.UseCart"
-	title="atreal.filecart: Use Cart"
-	/>
+       id="atreal.filecart.UseCart"
+       title="atreal.filecart: Use Cart"
+       />
     <permission
-	id="atreal.filecart.ViewComments"
-	title="atreal.filecart: View Download Comments"
-	/>
+       id="atreal.filecart.ViewComments"
+       title="atreal.filecart: View Download Comments"
+       />
     <permission
-	id="atreal.filecart.DeleteComments"
-	title="atreal.filecart: Delete Download Comments"
-	/>
+       id="atreal.filecart.DeleteComments"
+       title="atreal.filecart: Delete Download Comments"
+       />
 
 
     <!-- -->
@@ -66,8 +67,8 @@
     <!-- Adapter to mark object with interface -->
     <adapter
         for="Products.ATContentTypes.interface.interfaces.IATContentType"
-	factory=".marker.FileCartMarker"
-	provides=".interfaces.IFileCartMarker"
+	    factory=".marker.FileCartMarker"
+	    provides=".interfaces.IFileCartMarker"
         />
 
 
@@ -99,7 +100,6 @@
         description="Addable to cart."
         provides="atreal.filecart.interfaces.IFileCartable"
         />
-
 
     <!-- Translations -->
     <i18n:registerTranslations directory="locales"/>
