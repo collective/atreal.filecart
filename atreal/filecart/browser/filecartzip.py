@@ -48,7 +48,12 @@ class FileCartZip(object):
                 scales = ['_source']
 
             content = brain.getObject()
-            fields = [content.getPrimaryField()]
+            primary_field = content.getPrimaryField()
+            if primary_field is not None:
+                fields = [content.getPrimaryField()]
+            else:
+                fields = []
+
             for fieldname in additional_attachments:
                 fields.append(content.getField(fieldname))
 

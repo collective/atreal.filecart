@@ -101,7 +101,8 @@ class LineItemFactory( object ):
 
         additional_attachments = []
         for fieldname in self.content.Schema().keys():
-            if fieldname == self.content.getPrimaryField().__name__:
+            if self.content.getPrimaryField() is not None and \
+               fieldname == self.content.getPrimaryField().__name__:
                 continue
 
             field = self.content.getField(fieldname)

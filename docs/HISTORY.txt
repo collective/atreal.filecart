@@ -5,6 +5,9 @@ Changelog for atreal.filecart
 
 1.1 (Unreleased)
 ----------------
+    - Don't break if used with Dexterity content types.
+      [cedricmessiant]
+
     - Add IFileCartable behavior.
       [cedricmessiant]
 
