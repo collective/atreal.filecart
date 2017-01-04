@@ -147,7 +147,9 @@ class CartUtility (Persistent):
             if not session_manager.hasSessionData() and not create:
                 return
 
-            session = session_manager.getSessionData()
+            session = session_manager.getSessionData(create)
+            if session is None:
+                return
         else:
             session = session_manager.getSessionDataByKey(browser_id)
             if session is None:
@@ -155,7 +157,7 @@ class CartUtility (Persistent):
 
         if not session.has_key('getpaid.cart'):
             if create:
-                session['getpaid.cart'] = cart = Cart()
+                session['getpaid.cart'] = Cart()
             else:
                 return None
 

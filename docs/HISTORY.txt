@@ -6,7 +6,8 @@ Changelog for atreal.filecart
 1.1rc2 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Don't create session if not needed.
+  [vincentfretin]
 
 
 1.1rc1 (2014-09-15)
