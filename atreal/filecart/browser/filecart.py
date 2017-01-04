@@ -345,6 +345,19 @@ class CartContentsTable(object):
 
                             field = obj.getField(fieldname)
                             value = field.get(obj)
+                            if not value:
+                                # Empty BlobWrapper, the file was
+                                # removed after the item was put in the cart.
+                                table_row_class += " deleted"
+                                results.append(dict(
+                                    UID=uid,
+                                    id=item.name + '-' + fieldname,
+                                    title_or_id="%s (%s)" % (item.name, fieldname),
+                                    is_deleted=True,
+                                    table_row_class=table_row_class,
+                                ))
+                                continue
+
                             filename = value.filename
                             icon = mimetypes_registry.lookupExtension(filename).icon_path
                             size = byteDisplay(value.get_size())
