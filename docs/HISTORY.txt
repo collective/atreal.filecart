@@ -16,57 +16,62 @@ Changelog for atreal.filecart
 
 1.1rc1 (2014-09-15)
 -------------------
-    - Don't break if used with Dexterity content types.
-      [cedricmessiant]
 
-    - Add IFileCartable behavior.
-      [cedricmessiant]
+- Don't break if used with Dexterity content types.
+  [cedricmessiant]
 
-    - Remove IntIds utility from profile to avoid to clear catalog when installing the product."
-      [cedricmessiant]
+- Add IFileCartable behavior.
+  [cedricmessiant]
 
-    - Exclude empty file fields from zip.
-      [thomasdesvenain]
+- Remove IntIds utility from profile to avoid to clear catalog when installing the product."
+  [cedricmessiant]
 
-    - Extend api so that we can select scales of a carted image.
-      The selected scales are exported in the zip file.
-      [thomasdesvenain]
+- Exclude empty file fields from zip.
+  [thomasdesvenain]
 
-    - If we add to cart documents that have many file / image fields,
-      we manage those fields in our cart:
-      we can include each of them in zip or not.
-      [thomasdesvenain]
+- Extend api so that we can select scales of a carted image.
+  The selected scales are exported in the zip file.
+  [thomasdesvenain]
 
-    - On zip export, use if possible filename instead of content id.
-      [thomasdesvenain]
+- If we add to cart documents that have many file / image fields,
+  we manage those fields in our cart:
+  we can include each of them in zip or not.
+  [thomasdesvenain]
 
-    - Avoid file name doubloons in zip export.
-      [thomasdesvenain]
+- On zip export, use if possible filename instead of content id.
+  [thomasdesvenain]
 
-    - Works under Plone 4.3.
-      [thomasdesvenain]
+- Avoid file name doubloons in zip export.
+  [thomasdesvenain]
 
-Version 1.0.0rc1 - 2009-12-22
------------------------------
-    - Bug Fix : Portlet was shown empty when not available. Now he's not shown.
-      Property decorator is necessary on available method.
-      [Florent Michon]
+- Works under Plone 4.3.
+  [thomasdesvenain]
 
-Version 1.0.0beta2 - 2009-09-29
----------------------------
-    - Bug Fix : Compatibility with kss actions of richfile plugins.
-      [Florent Michon]
+1.0.0rc1 (2009-12-22)
+---------------------
 
-Version 1.0.0beta1 - 2009-09-07
----------------------------
-    - First Public Release
-      [Florent Michon]
+- Bug Fix : Portlet was shown empty when not available. Now he's not shown.
+  Property decorator is necessary on available method.
+  [Florent Michon]
 
-Version 0.1.0 - Unreleased
----------------------------
-    - First development.
-      [Florent Michon]
+1.0.0beta2 (2009-09-29)
+-----------------------
 
-    - Initial package structure.
-      [zopeskel]
+- Bug Fix : Compatibility with kss actions of richfile plugins.
+  [Florent Michon]
+
+1.0.0beta1 (2009-09-07)
+-----------------------
+
+- First Public Release
+  [Florent Michon]
+
+0.1.0 (unreleased)
+------------------
+
+- First development.
+  [Florent Michon]
+
+- Initial package structure.
+  [zopeskel]
 
