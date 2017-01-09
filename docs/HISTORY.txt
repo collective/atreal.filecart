@@ -3,8 +3,8 @@ Changelog for atreal.filecart
 =============================
 (name of developer listed in brackets)
 
-1.1rc2 (unreleased)
--------------------
+1.1.0 (2017-01-09)
+------------------
 
 - Don't crash the cart if an additional attachment was removed after the item
   was put in the cart. Mark the attachment as deleted.
